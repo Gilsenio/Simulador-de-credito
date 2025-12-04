@@ -1,0 +1,494 @@
+<!doctype html>
+<html lang="pt">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Simulador de Crédito</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        padding: 20px;
+      }
+
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        background: white;
+        border-radius: 20px;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+      }
+
+      .header {
+        background: linear-gradient(135deg, #3498db, #2980b9);
+        color: white;
+        padding: 30px;
+        text-align: center;
+      }
+
+      .header h1 {
+        font-size: 2.5em;
+        margin-bottom: 10px;
+      }
+
+      .header p {
+        font-size: 1.2em;
+        opacity: 0.9;
+      }
+
+      .content {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0;
+      }
+
+      .input-section {
+        padding: 40px;
+        background: #f8f9fa;
+      }
+
+      .results-section {
+        padding: 40px;
+        background: white;
+      }
+
+      .section-title {
+        font-size: 1.8em;
+        color: #2c3e50;
+        margin-bottom: 30px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .form-group {
+        margin-bottom: 25px;
+      }
+
+      .form-group label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 600;
+        color: #34495e;
+        font-size: 1.1em;
+      }
+
+      .form-group input {
+        width: 100%;
+        padding: 15px;
+        border: 2px solid #e1e8ed;
+        border-radius: 10px;
+        font-size: 1.1em;
+        transition: all 0.3s ease;
+      }
+
+      .form-group input:focus {
+        outline: none;
+        border-color: #3498db;
+        box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+      }
+
+      .btn-calculate {
+        width: 100%;
+        padding: 18px;
+        background: linear-gradient(135deg, #27ae60, #2ecc71);
+        color: white;
+        border: none;
+        border-radius: 10px;
+        font-size: 1.2em;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        margin-top: 20px;
+      }
+
+      .btn-calculate:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 20px rgba(39, 174, 96, 0.3);
+      }
+
+      .result-card {
+        background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+        border-radius: 15px;
+        padding: 25px;
+        margin-bottom: 20px;
+        border-left: 5px solid #3498db;
+        transition: all 0.3s ease;
+      }
+
+      .result-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+      }
+
+      .result-label {
+        font-size: 1.1em;
+        color: #7f8c8d;
+        margin-bottom: 8px;
+      }
+
+      .result-value {
+        font-size: 1.8em;
+        font-weight: 700;
+        color: #2c3e50;
+      }
+
+      .result-formula {
+        font-size: 0.9em;
+        color: #95a5a6;
+        font-family: 'Courier New', monospace;
+        margin-top: 5px;
+      }
+
+      .warning {
+        background: linear-gradient(135deg, #ff6b6b, #ee5a52);
+        color: white;
+        padding: 15px;
+        border-radius: 10px;
+        margin-top: 20px;
+        display: none;
+      }
+
+      .warning.show {
+        display: block;
+      }
+
+      .success {
+        background: linear-gradient(135deg, #2ecc71, #27ae60);
+        color: white;
+        padding: 15px;
+        border-radius: 10px;
+        margin-top: 20px;
+        display: none;
+      }
+
+      .success.show {
+        display: block;
+      }
+
+      .summary-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 30px;
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+      }
+
+      .summary-table th {
+        background: linear-gradient(135deg, #34495e, #2c3e50);
+        color: white;
+        padding: 15px;
+        text-align: left;
+        font-weight: 600;
+      }
+
+      .summary-table td {
+        padding: 15px;
+        border-bottom: 1px solid #ecf0f1;
+        background: white;
+      }
+
+      .summary-table tr:nth-child(even) td {
+        background: #f8f9fa;
+      }
+
+      @media (max-width: 768px) {
+        .content {
+          grid-template-columns: 1fr;
+        }
+
+        .header h1 {
+          font-size: 2em;
+        }
+
+        .input-section,
+        .results-section {
+          padding: 20px;
+        }
+      }
+
+      .icon {
+        font-size: 1.2em;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1>💰 Simulador de Crédito</h1>
+        <p>
+          Calcule sua prestação, taxa de esforço e TAEG de forma simples e
+          rápida
+        </p>
+      </div>
+
+      <div class="content">
+        <div class="input-section">
+          <h2 class="section-title">
+            <span class="icon">📊</span>
+            Dados do Crédito
+          </h2>
+
+          <div class="form-group">
+            <label for="montante">Montante (CVE)</label>
+            <input
+              type="number"
+              id="montante"
+              placeholder="Ex: 5000000"
+              value="5000000"
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="taxa">Taxa de Juro Anual (%)</label>
+            <input
+              type="number"
+              id="taxa"
+              step="0.1"
+              placeholder="Ex: 7.5"
+              value="7.5"
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="prazo">Prazo (meses)</label>
+            <input type="number" id="prazo" placeholder="Ex: 420" value="420" />
+          </div>
+
+          <div class="form-group">
+            <label for="comissao">Comissão (%)</label>
+            <input
+              type="number"
+              id="comissao"
+              step="0.1"
+              placeholder="Ex: 2"
+              value="2"
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="rendimento">Rendimento Mensal Líquido (CVE)</label>
+            <input
+              type="number"
+              id="rendimento"
+              placeholder="Ex: 73524"
+              value="73524"
+            />
+          </div>
+
+          <button class="btn-calculate" onclick="calcular()">
+            🧮 Calcular Simulação
+          </button>
+
+          <div id="warning" class="warning">
+            ⚠️ <strong>Atenção:</strong> Taxa de esforço superior a 35%! O
+            crédito pode ser recusado.
+          </div>
+
+          <div id="success" class="success">
+            ✅ <strong>Excelente:</strong> Taxa de esforço dentro dos parâmetros
+            recomendados.
+          </div>
+        </div>
+
+        <div class="results-section">
+          <h2 class="section-title">
+            <span class="icon">📈</span>
+            Resultados da Simulação
+          </h2>
+
+          <div class="result-card">
+            <div class="result-label">Taxa Mensal</div>
+            <div class="result-value" id="taxaMensal">-</div>
+            <div class="result-formula">Taxa Anual ÷ 12</div>
+          </div>
+
+          <div class="result-card">
+            <div class="result-label">Prestação Mensal</div>
+            <div class="result-value" id="prestacao">-</div>
+            <div class="result-formula">
+              PGTO(taxa_mensal; prazo; -montante)
+            </div>
+          </div>
+
+          <div class="result-card">
+            <div class="result-label">Taxa de Esforço</div>
+            <div class="result-value" id="taxaEsforco">-</div>
+            <div class="result-formula">Prestação ÷ Rendimento</div>
+          </div>
+
+          <div class="result-card">
+            <div class="result-label">TAEG</div>
+            <div class="result-value" id="taeg">-</div>
+            <div class="result-formula">Taxa Anual Efetiva Global</div>
+          </div>
+
+          <table class="summary-table" style="display: none" id="summaryTable">
+            <thead>
+              <tr>
+                <th>Resumo Financeiro</th>
+                <th>Valor</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Montante Solicitado</td>
+                <td id="summaryMontante">-</td>
+              </tr>
+              <tr>
+                <td>Montante com Comissão</td>
+                <td id="summaryMontanteComissao">-</td>
+              </tr>
+              <tr>
+                <td>Total a Pagar</td>
+                <td id="summaryTotal">-</td>
+              </tr>
+              <tr>
+                <td>Total de Juros</td>
+                <td id="summaryJuros">-</td>
+              </tr>
+              <tr>
+                <td>Prazo em Anos</td>
+                <td id="summaryAnos">-</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      function calcular() {
+        // Obter valores dos inputs
+        const montante =
+          parseFloat(document.getElementById('montante').value) || 0;
+        const taxaAnual =
+          parseFloat(document.getElementById('taxa').value) || 0;
+        const prazo = parseInt(document.getElementById('prazo').value) || 0;
+        const comissao =
+          parseFloat(document.getElementById('comissao').value) || 0;
+        const rendimento =
+          parseFloat(document.getElementById('rendimento').value) || 0;
+
+        // Validações
+        if (montante <= 0 || taxaAnual <= 0 || prazo <= 0 || rendimento <= 0) {
+          alert('Por favor, preencha todos os campos com valores válidos.');
+          return;
+        }
+
+        // Cálculos
+        const taxaMensal = taxaAnual / 12 / 100;
+        const prestacao = calcularPrestacao(montante, taxaMensal, prazo);
+        const taxaEsforco = (prestacao / rendimento) * 100;
+        const montanteComComissao = montante * (1 - comissao / 100);
+        const taeg = calcularTAEG(prestacao, prazo, montanteComComissao) * 100;
+
+        // Atualizar resultados na tela
+        document.getElementById('taxaMensal').textContent =
+          (taxaMensal * 100).toFixed(3) + '%';
+        document.getElementById('prestacao').textContent =
+          formatarMoeda(prestacao);
+        document.getElementById('taxaEsforco').textContent =
+          taxaEsforco.toFixed(1) + '%';
+        document.getElementById('taeg').textContent = taeg.toFixed(3) + '%';
+
+        // Resumo financeiro
+        const totalPagar = prestacao * prazo;
+        const totalJuros = totalPagar - montante;
+        const prazoAnos = prazo / 12;
+
+        document.getElementById('summaryMontante').textContent =
+          formatarMoeda(montante);
+        document.getElementById('summaryMontanteComissao').textContent =
+          formatarMoeda(montanteComComissao);
+        document.getElementById('summaryTotal').textContent =
+          formatarMoeda(totalPagar);
+        document.getElementById('summaryJuros').textContent =
+          formatarMoeda(totalJuros);
+        document.getElementById('summaryAnos').textContent =
+          prazoAnos.toFixed(1) + ' anos';
+
+        // Mostrar tabela de resumo
+        document.getElementById('summaryTable').style.display = 'table';
+
+        // Alertas baseados na taxa de esforço
+        const warningDiv = document.getElementById('warning');
+        const successDiv = document.getElementById('success');
+
+        if (taxaEsforco > 35) {
+          warningDiv.classList.add('show');
+          successDiv.classList.remove('show');
+        } else {
+          successDiv.classList.add('show');
+          warningDiv.classList.remove('show');
+        }
+      }
+
+      function calcularPrestacao(montante, taxaMensal, prazo) {
+        // Fórmula: PMT = P * [r(1+r)^n] / [(1+r)^n - 1]
+        const fator = Math.pow(1 + taxaMensal, prazo);
+        return (montante * (taxaMensal * fator)) / (fator - 1);
+      }
+
+      function calcularTAEG(prestacao, prazo, montanteComComissao) {
+        // Aproximação da TAEG usando método iterativo simples
+        let taxa = 0.01; // Taxa inicial de 1%
+        let tentativas = 0;
+        const maxTentativas = 1000;
+        const precisao = 0.01;
+
+        while (tentativas < maxTentativas) {
+          const taxaMensal = taxa / 12;
+          const prestacaoCalculada = calcularPrestacao(
+            montanteComComissao,
+            taxaMensal,
+            prazo
+          );
+          const diferenca = Math.abs(prestacaoCalculada - prestacao);
+
+          if (diferenca < precisao) {
+            return taxa;
+          }
+
+          if (prestacaoCalculada > prestacao) {
+            taxa -= 0.0001;
+          } else {
+            taxa += 0.0001;
+          }
+
+          tentativas++;
+        }
+
+        return taxa;
+      }
+
+      function formatarMoeda(valor) {
+        return new Intl.NumberFormat('pt-CV', {
+          style: 'currency',
+          currency: 'CVE',
+          minimumFractionDigits: 0,
+          maximumFractionDigits: 0,
+        }).format(valor);
+      }
+
+      // Calcular automaticamente quando a página carrega
+      window.onload = function () {
+        calcular();
+      };
+
+      // Calcular automaticamente quando os valores mudam
+      document.querySelectorAll('input').forEach((input) => {
+        input.addEventListener('input', calcular);
+      });
+    </script>
+  </body>
+</html>
