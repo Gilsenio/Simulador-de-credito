@@ -81,7 +81,8 @@
         font-size: 1.1em;
       }
 
-      .form-group input {
+      .form-group input,
+      .form-group select {
         width: 100%;
         padding: 15px;
         border: 2px solid #e1e8ed;
@@ -90,10 +91,29 @@
         transition: all 0.3s ease;
       }
 
-      .form-group input:focus {
+      .form-group input:focus,
+      .form-group select:focus {
         outline: none;
         border-color: #3498db;
         box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+      }
+
+      .parameter-section {
+        background: linear-gradient(135deg, #e8f4fd, #d6eaf8);
+        border: 2px solid #3498db;
+        border-radius: 15px;
+        padding: 20px;
+        margin-bottom: 25px;
+      }
+
+      .parameter-title {
+        font-size: 1.2em;
+        color: #2980b9;
+        margin-bottom: 15px;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 8px;
       }
 
       .btn-calculate {
@@ -129,6 +149,16 @@
         box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
       }
 
+      .result-card.warning {
+        border-left-color: #e74c3c;
+        background: linear-gradient(135deg, #ffebee, #ffcdd2);
+      }
+
+      .result-card.success {
+        border-left-color: #27ae60;
+        background: linear-gradient(135deg, #e8f5e8, #c8e6c9);
+      }
+
       .result-label {
         font-size: 1.1em;
         color: #7f8c8d;
@@ -148,30 +178,31 @@
         margin-top: 5px;
       }
 
-      .warning {
+      .alert {
+        padding: 15px;
+        border-radius: 10px;
+        margin-top: 20px;
+        display: none;
+        font-weight: 600;
+      }
+
+      .alert.show {
+        display: block;
+      }
+
+      .alert.danger {
         background: linear-gradient(135deg, #ff6b6b, #ee5a52);
         color: white;
-        padding: 15px;
-        border-radius: 10px;
-        margin-top: 20px;
-        display: none;
       }
 
-      .warning.show {
-        display: block;
+      .alert.warning {
+        background: linear-gradient(135deg, #f39c12, #e67e22);
+        color: white;
       }
 
-      .success {
+      .alert.success {
         background: linear-gradient(135deg, #2ecc71, #27ae60);
         color: white;
-        padding: 15px;
-        border-radius: 10px;
-        margin-top: 20px;
-        display: none;
-      }
-
-      .success.show {
-        display: block;
       }
 
       .summary-table {
@@ -201,6 +232,30 @@
         background: #f8f9fa;
       }
 
+      .status-indicator {
+        display: inline-block;
+        padding: 5px 12px;
+        border-radius: 20px;
+        font-size: 0.9em;
+        font-weight: 600;
+        margin-left: 10px;
+      }
+
+      .status-approved {
+        background: #d4edda;
+        color: #155724;
+      }
+
+      .status-review {
+        background: #fff3cd;
+        color: #856404;
+      }
+
+      .status-rejected {
+        background: #f8d7da;
+        color: #721c24;
+      }
+
       @media (max-width: 768px) {
         .content {
           grid-template-columns: 1fr;
@@ -218,6 +273,13 @@
 
       .icon {
         font-size: 1.2em;
+      }
+
+      .info-text {
+        font-size: 0.9em;
+        color: #7f8c8d;
+        font-style: italic;
+        margin-top: 5px;
       }
     </style>
   </head>
@@ -285,18 +347,56 @@
             />
           </div>
 
+          <div class="parameter-section">
+            <div class="parameter-title">
+              <span class="icon">⚙️</span>
+              Parâmetros Bancários
+            </div>
+
+            <div class="form-group">
+              <label for="limiteTaxaEsforco">Limite Taxa de Esforço (%)</label>
+              <select id="limiteTaxaEsforco">
+                <option value="30">30% - Conservador</option>
+                <option value="35" selected>35% - Padrão Bancário</option>
+                <option value="40">40% - Flexível</option>
+                <option value="50">50% - Máximo Legal</option>
+                <option value="custom">Personalizado</option>
+              </select>
+              <div class="info-text">
+                A maioria dos bancos usa 30-35% como limite máximo
+              </div>
+            </div>
+
+            <div class="form-group" id="customLimitGroup" style="display: none">
+              <label for="customLimit">Taxa Personalizada (%)</label>
+              <input
+                type="number"
+                id="customLimit"
+                min="1"
+                max="100"
+                step="0.1"
+                placeholder="Ex: 32.5"
+              />
+            </div>
+          </div>
+
           <button class="btn-calculate" onclick="calcular()">
             🧮 Calcular Simulação
           </button>
 
-          <div id="warning" class="warning">
-            ⚠️ <strong>Atenção:</strong> Taxa de esforço superior a 35%! O
-            crédito pode ser recusado.
+          <div id="alertDanger" class="alert danger">
+            🚫 <strong>Crédito Rejeitado:</strong> Taxa de esforço muito elevada
+            para aprovação bancária.
           </div>
 
-          <div id="success" class="success">
-            ✅ <strong>Excelente:</strong> Taxa de esforço dentro dos parâmetros
-            recomendados.
+          <div id="alertWarning" class="alert warning">
+            ⚠️ <strong>Análise Necessária:</strong> Taxa de esforço no limite.
+            Aprovação sujeita a análise adicional.
+          </div>
+
+          <div id="alertSuccess" class="alert success">
+            ✅ <strong>Pré-Aprovado:</strong> Taxa de esforço dentro dos
+            parâmetros bancários recomendados.
           </div>
         </div>
 
@@ -320,10 +420,14 @@
             </div>
           </div>
 
-          <div class="result-card">
-            <div class="result-label">Taxa de Esforço</div>
+          <div class="result-card" id="taxaEsforcoCard">
+            <div class="result-label">
+              Taxa de Esforço <span id="statusIndicator"></span>
+            </div>
             <div class="result-value" id="taxaEsforco">-</div>
-            <div class="result-formula">Prestação ÷ Rendimento</div>
+            <div class="result-formula">
+              Prestação ÷ Rendimento (Limite: <span id="limiteAtual">35</span>%)
+            </div>
           </div>
 
           <div class="result-card">
@@ -360,6 +464,10 @@
                 <td>Prazo em Anos</td>
                 <td id="summaryAnos">-</td>
               </tr>
+              <tr>
+                <td>Status da Aprovação</td>
+                <td id="summaryStatus">-</td>
+              </tr>
             </tbody>
           </table>
         </div>
@@ -367,6 +475,19 @@
     </div>
 
     <script>
+      // Mostrar/esconder campo personalizado
+      document
+        .getElementById('limiteTaxaEsforco')
+        .addEventListener('change', function () {
+          const customGroup = document.getElementById('customLimitGroup');
+          if (this.value === 'custom') {
+            customGroup.style.display = 'block';
+          } else {
+            customGroup.style.display = 'none';
+          }
+          calcular();
+        });
+
       function calcular() {
         // Obter valores dos inputs
         const montante =
@@ -378,6 +499,18 @@
           parseFloat(document.getElementById('comissao').value) || 0;
         const rendimento =
           parseFloat(document.getElementById('rendimento').value) || 0;
+
+        // Obter limite da taxa de esforço
+        const limiteTaxaSelect =
+          document.getElementById('limiteTaxaEsforco').value;
+        let limiteTaxaEsforco;
+
+        if (limiteTaxaSelect === 'custom') {
+          limiteTaxaEsforco =
+            parseFloat(document.getElementById('customLimit').value) || 35;
+        } else {
+          limiteTaxaEsforco = parseFloat(limiteTaxaSelect);
+        }
 
         // Validações
         if (montante <= 0 || taxaAnual <= 0 || prazo <= 0 || rendimento <= 0) {
@@ -400,6 +533,7 @@
         document.getElementById('taxaEsforco').textContent =
           taxaEsforco.toFixed(1) + '%';
         document.getElementById('taeg').textContent = taeg.toFixed(3) + '%';
+        document.getElementById('limiteAtual').textContent = limiteTaxaEsforco;
 
         // Resumo financeiro
         const totalPagar = prestacao * prazo;
@@ -417,20 +551,45 @@
         document.getElementById('summaryAnos').textContent =
           prazoAnos.toFixed(1) + ' anos';
 
+        // Determinar status da aprovação
+        let status, statusClass, statusText;
+        const taxaEsforcoCard = document.getElementById('taxaEsforcoCard');
+        const statusIndicator = document.getElementById('statusIndicator');
+
+        if (taxaEsforco <= limiteTaxaEsforco) {
+          status = 'success';
+          statusClass = 'status-approved';
+          statusText = '✅ Pré-Aprovado';
+          taxaEsforcoCard.className = 'result-card success';
+        } else if (taxaEsforco <= limiteTaxaEsforco + 5) {
+          status = 'warning';
+          statusClass = 'status-review';
+          statusText = '⚠️ Análise Necessária';
+          taxaEsforcoCard.className = 'result-card warning';
+        } else {
+          status = 'danger';
+          statusClass = 'status-rejected';
+          statusText = '🚫 Rejeitado';
+          taxaEsforcoCard.className = 'result-card warning';
+        }
+
+        statusIndicator.innerHTML = `<span class="status-indicator ${statusClass}">${statusText}</span>`;
+        document.getElementById('summaryStatus').innerHTML =
+          `<span class="status-indicator ${statusClass}">${statusText}</span>`;
+
         // Mostrar tabela de resumo
         document.getElementById('summaryTable').style.display = 'table';
 
-        // Alertas baseados na taxa de esforço
-        const warningDiv = document.getElementById('warning');
-        const successDiv = document.getElementById('success');
-
-        if (taxaEsforco > 35) {
-          warningDiv.classList.add('show');
-          successDiv.classList.remove('show');
-        } else {
-          successDiv.classList.add('show');
-          warningDiv.classList.remove('show');
-        }
+        // Mostrar alertas apropriados
+        document
+          .getElementById('alertDanger')
+          .classList.toggle('show', status === 'danger');
+        document
+          .getElementById('alertWarning')
+          .classList.toggle('show', status === 'warning');
+        document
+          .getElementById('alertSuccess')
+          .classList.toggle('show', status === 'success');
       }
 
       function calcularPrestacao(montante, taxaMensal, prazo) {
@@ -486,8 +645,9 @@
       };
 
       // Calcular automaticamente quando os valores mudam
-      document.querySelectorAll('input').forEach((input) => {
-        input.addEventListener('input', calcular);
+      document.querySelectorAll('input, select').forEach((element) => {
+        element.addEventListener('input', calcular);
+        element.addEventListener('change', calcular);
       });
     </script>
   </body>
